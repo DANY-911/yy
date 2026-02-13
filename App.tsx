@@ -6,6 +6,7 @@ import { GameState, Prize, UserPreference } from './types';
 
 const App: React.FC = () => {
   const [config, setConfig] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   const [gameState, setGameState] = useState<GameState>(GameState.IDLE);
   const [winningPrize, setWinningPrize] = useState<Prize | null>(null);
   const [rotation, setRotation] = useState(0);
@@ -13,10 +14,17 @@ const App: React.FC = () => {
   const [showFullPrivacy, setShowFullPrivacy] = useState(false);
 
   useEffect(() => {
-    fetch('./data.json')
-      .then(res => res.json())
+    // ใช้ absolute path เพื่อป้องกันปัญหาบน Production (Vercel)
+    fetch('/data.json')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to load configuration');
+        return res.json();
+      })
       .then(data => setConfig(data))
-      .catch(err => console.error("Error loading config:", err));
+      .catch(err => {
+        console.error("Error loading config:", err);
+        setError("ไม่สามารถโหลดข้อมูลระบบได้ โปรดลองใหม่อีกครั้ง");
+      });
 
     const consent = localStorage.getItem('yuedpao-cookie-consent');
     if (!consent) {
@@ -33,10 +41,8 @@ const App: React.FC = () => {
     const prize = prizes[randomIndex];
     
     const sliceAngle = 360 / prizes.length;
-    const extraSpins = 10; // เพิ่มรอบหมุนให้ดูตื่นเต้นขึ้น
+    const extraSpins = 10; 
     
-    // คำนวณให้เข็มชี้ (ที่อยู่ด้านบนสุด) ตรงกับกลางช่องรางวัลพอดี
-    // วงล้อหมุนตามเข็มนาฬิกา ดังนั้นต้องหมุนกลับไปหา Index ที่ต้องการ
     const currentRotationBase = Math.floor(rotation / 360) * 360;
     const targetRotation = currentRotationBase + (extraSpins * 360) + (360 - (randomIndex * sliceAngle + sliceAngle / 2));
     
@@ -48,7 +54,7 @@ const App: React.FC = () => {
       setTimeout(() => {
         setGameState(GameState.COLLECTING_DATA);
       }, 1500);
-    }, 7000); // แมตช์กับ transition duration ใน SpinWheel
+    }, 7000);
   };
 
   const handleFormSubmit = (data: Partial<UserPreference>) => {
@@ -79,7 +85,35 @@ const App: React.FC = () => {
     window.scrollTo({top: 0, behavior: 'smooth'});
   };
 
-  if (!config) return <div className="min-h-screen bg-white flex items-center justify-center font-syncopate text-[10px] tracking-[0.5em] animate-pulse">YU<span className="text-[#0088cc]">ED</span>PAO_LABS...</div>;
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center font-inter p-6 text-center">
+        <div className="text-red-500 mb-4 text-4xl">⚠️</div>
+        <h1 className="text-xl font-bold mb-2 uppercase font-syncopate">System Error</h1>
+        <p className="text-zinc-500 mb-6">{error}</p>
+        <button onClick={() => window.location.reload()} className="px-6 py-2 bg-black text-white rounded-full text-xs font-bold uppercase tracking-widest">Retry</button>
+      </div>
+    );
+  }
+
+  if (!config) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center font-syncopate text-[10px] tracking-[0.5em]">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="mb-4">YU<span className="text-[#0088cc]">ED</span>PAO_LABS...</div>
+          <div className="w-48 h-1 bg-zinc-100 rounded-full overflow-hidden">
+             <div className="h-full bg-[#0088cc] w-1/2 animate-[loading_1.5s_infinite_ease-in-out]"></div>
+          </div>
+        </div>
+        <style>{`
+          @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 selection:bg-[#00f3ff] selection:text-white flex flex-col font-inter">
