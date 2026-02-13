@@ -1,0 +1,15 @@
+
+{
+  "prizes": [
+    { "label": "เสื้อรุ่น Ultra Flow", "color": "#000000" },
+    { "label": "ส่วนลด 50%", "color": "#00f3ff" },
+    { "label": "ส่วนลด 100.-", "color": "#1a1a1a" },
+    { "label": "ส่งฟรีไม่มีขั้นต่ำ", "color": "#0088cc" },
+    { "label": "Limited Badge", "color": "#333333" },
+    { "label": "ลด 50 บาท", "color": "#00f3ff" }
+  ],
+  "sizes": ["S", "M", "L", "XL", "2XL", "3XL", "4XL"],
+  "styles": ["Oversize", "Regular Fit", "Slim Fit"],
+  "rewardCode": "ULTRA2026",
+  "brandName": "YUEDPAO"
+}
